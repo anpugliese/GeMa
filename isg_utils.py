@@ -30,7 +30,7 @@ def interpolation(p, geoid, type='bilinear'):
     delta_lat = geoid['deltalat']
     min_lng = geoid['lonmin']
     delta_lng = geoid['deltalon']
-    grid = geoid['grid']
+    grid = geoid['grid'] 
     no_data = geoid['nodata']
 
     lat1 = min_lat + delta_lat*p1[0]
