@@ -1,4 +1,8 @@
 import numpy as np
+import csv
+
+# Point p = (lat, lng, h)
+# geoid object has a grid attribute with the geoid ondulation at each interval
 
 def getQuadrant(p, geoid):
     min_lat = geoid['latmin']
@@ -19,14 +23,16 @@ def getQuadrant(p, geoid):
     return (i_up, j_left), (i_up, j_right), (i_down, j_left), (i_down, j_right)
 
 
-def interpolation(p, p1, p2, p3, p4, geoid, type='bilinear'):
+def interpolation(p, geoid, type='bilinear'):
+    p1,p2,p3,p4 = getQuadrant(p, geoid)
+    # Interpolation of geoid ondulation on a given point p
     min_lat = geoid['latmin']
     delta_lat = geoid['deltalat']
     min_lng = geoid['lonmin']
     delta_lng = geoid['deltalon']
     grid = geoid['grid']
+    no_data = geoid['nodata']
 
-   
     lat1 = min_lat + delta_lat*p1[0]
     lng1 = min_lng + delta_lng*p1[1]
     lat2 = min_lat + delta_lat*p2[0]
@@ -36,7 +42,10 @@ def interpolation(p, p1, p2, p3, p4, geoid, type='bilinear'):
     lat4 = min_lat + delta_lat*p4[0]
     lng4 = min_lng + delta_lng*p4[1]
 
-
+    if grid[p1] == no_data or grid[p2] == no_data or grid[p3] == no_data or grid[p4] == no_data:
+        # No data at one of the interpolation points -> the point has no data corresponding
+        # that point
+        return None
 
     if type == 'bilinear': 
         A = np.array([[lat1, lng1, lat1*lng1, 1],
@@ -46,13 +55,25 @@ def interpolation(p, p1, p2, p3, p4, geoid, type='bilinear'):
 
         B = np.array([grid[p1], grid[p2], grid[p3], grid[p4]]) 
         x = np.linalg.solve(A, B) 
-        print(x)
 
         Np = x[0]*p[0]+ x[1]*p[1] + x[2]*p[0]*p[1] + x[3]
 
         return Np
 
-
 def orthometric_height(p, Np):
+    # Calculates ortometric heigth from a geoid ondulation Np and a point
     return p[2] - Np
 
+def available_geoids(p):
+    # bounds csv = (geoid_name, min_lat, max_lat, min_lon, max_lon, file_name)
+    # Returns list of names of available geoids in format (geoid_name, file_name)
+    available_geoids = []
+    with open('bounds.csv') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        for row in csv_reader:
+            # min_lat <= lat_p <= max_lat
+            # min_lng <= lng_p <= max_lng
+            if p[0] >= float(row[1]) and p[0] <= float(row[2]) and p[1] >= float(row[3]) and p[1] <= float(row[4]):
+                row = (row[0], row[5])
+                available_geoids.append(row)
+    return available_geoids    
