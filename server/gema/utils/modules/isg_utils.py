@@ -1,8 +1,11 @@
 import numpy as np
+import os
 import csv
 
 # Point p = (lat, lng, h)
 # geoid object has a grid attribute with the geoid ondulation at each interval
+
+path = "gema/utils/modules/"
 
 def getQuadrant(p, geoid):
     min_lat = geoid['latmin']
@@ -68,12 +71,13 @@ def available_geoids(p):
     # bounds csv = (geoid_name, min_lat, max_lat, min_lon, max_lon, file_name)
     # Returns list of names of available geoids in format (geoid_name, file_name)
     available_geoids = []
-    with open('bounds.csv') as csv_file:
+    print(os.listdir())
+    with open(path + 'bounds.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
             # min_lat <= lat_p <= max_lat
             # min_lng <= lng_p <= max_lng
             if p[0] >= float(row[1]) and p[0] <= float(row[2]) and p[1] >= float(row[3]) and p[1] <= float(row[4]):
                 row = (row[0], row[5])
-                available_geoids.append(row)
+                available_geoids.append(row) 
     return available_geoids    

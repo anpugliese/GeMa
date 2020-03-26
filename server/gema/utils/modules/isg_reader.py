@@ -2,16 +2,18 @@ import numpy as np
 import os
 import csv
 
+path = "gema/utils/modules/"
+
 def populate_bounds():
     geoid_file_names = os.listdir("geoids")
-    with open('bounds.csv', 'w', newline='') as outfile:
+    with open(path + 'bounds.csv', 'w', newline='') as outfile:
         w = csv.writer(outfile)
         for name in geoid_file_names:
             geoid = read_header('geoids/'+name)
             w.writerow([geoid['modelname'], str(geoid['latmin']), str(geoid['latmax']), str(geoid['lonmin']), str(geoid['lonmax']), str(name)])
 
 def read_header(filename):
-    f = open(filename, "r")
+    f = open(path + filename, "r")
     f.readline()
     line = f.readline()
     head = {}
@@ -33,7 +35,7 @@ def read_header(filename):
     return head
 
 def read_geoid(filename):
-    f = open(filename, "r")
+    f = open(path + filename, "r")
     f.readline()
     line = f.readline()
     geoid = {}

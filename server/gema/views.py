@@ -5,6 +5,7 @@ from django.template import loader
 from django.http import HttpResponse
 from .models import Choice, Question
 import json
+from .utils.modules.isg_utils import *
 
 @csrf_exempt
 def geoids(request):
@@ -14,11 +15,12 @@ def geoids(request):
         lat = body["latitude"]
         lng = body['longitude'] 
         h = body['h']
+        geoid_list = available_geoids((lat, lng, h))
         #lat = request.POST['latitude']
         #lng = request.POST['longitude'] 
         #h = request.POST['h']
         
-        res = json.dumps({"lat": lat, "lng": lng, "h": h})
+        res = json.dumps({"geoid-list": geoid_list})
     return HttpResponse(res, status=200)
 
 
