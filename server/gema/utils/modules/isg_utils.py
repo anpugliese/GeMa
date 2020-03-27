@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import csv
+from .isg_reader import *
 
 # Point p = (lat, lng, h)
 # geoid object has a grid attribute with the geoid ondulation at each interval
@@ -14,7 +15,7 @@ def getQuadrant(p, geoid):
     delta_lng = geoid['deltalon']
     lat = p[0]
     lng = p[1]
-
+ 
     i_up = int((lat - min_lat) / delta_lat)
     if i_up == geoid['nrows']: i_up = i_up - 1
     i_down = i_up + 1
@@ -26,7 +27,7 @@ def getQuadrant(p, geoid):
     return (i_up, j_left), (i_up, j_right), (i_down, j_left), (i_down, j_right)
 
 
-def interpolation(p, geoid, type='bilinear'):
+def interpolation(p, geoid, type_='bilinear'):
     p1,p2,p3,p4 = getQuadrant(p, geoid)
     # Interpolation of geoid ondulation on a given point p
     min_lat = geoid['latmin']
@@ -50,7 +51,7 @@ def interpolation(p, geoid, type='bilinear'):
         # that point
         return None
 
-    if type == 'bilinear': 
+    if type_ == 'bilinear': 
         A = np.array([[lat1, lng1, lat1*lng1, 1],
                       [lat2, lng2, lat2*lng2, 1], 
                       [lat3, lng3, lat3*lng3, 1],
@@ -60,13 +61,25 @@ def interpolation(p, geoid, type='bilinear'):
         x = np.linalg.solve(A, B) 
 
         Np = x[0]*p[0]+ x[1]*p[1] + x[2]*p[0]*p[1] + x[3]
-
         return Np
 
 def orthometric_height(p, Np):
     # Calculates ortometric heigth from a geoid ondulation Np and a point
     return p[2] - Np
 
+def calculate_orthometric_height(p, geoid_name, type_='bilinear'):
+    try:
+        filename = get_filename_from_geoid_name(geoid_name)
+        geoid = read_geoid(filename)
+        Np = interpolation(p, geoid, type_)
+        if Np is None:
+            raise Exception("Np is None")
+        h = orthometric_height(p, Np)
+        return h
+    except Exception as e:
+        print(e)
+        return None
+    
 def available_geoids(p):
     # bounds csv = (geoid_name, min_lat, max_lat, min_lon, max_lon, file_name)
     # Returns list of names of available geoids in format (geoid_name, file_name)
@@ -78,6 +91,6 @@ def available_geoids(p):
             # min_lat <= lat_p <= max_lat
             # min_lng <= lng_p <= max_lng
             if p[0] >= float(row[1]) and p[0] <= float(row[2]) and p[1] >= float(row[3]) and p[1] <= float(row[4]):
-                row = (row[0], row[5])
+                row = (row[0])
                 available_geoids.append(row) 
     return available_geoids    

@@ -23,6 +23,21 @@ def geoids(request):
         res = json.dumps({"geoid-list": geoid_list})
     return HttpResponse(res, status=200)
 
+@csrf_exempt
+def get_orthometric_height(request):
+    if request.method == "POST":
+        body = json.loads(request.body)
+        lat = body["latitude"]
+        lng = body['longitude']
+        h = body['h']
+        geoid_name = body["geoid-name"]
+        p = (float(lat), float(lng), float(h))
+        o_h = calculate_orthometric_height(p, geoid_name)
+        if o_h is not None:
+            res = json.dumps({"h": o_h})
+        else:
+            return HttpResponse("Error calculating", status=401)        
+    return HttpResponse(res, status=200)
 
 def index(request):
     latest_question_list = Question.objects.order_by('-pub_date')[:5]
