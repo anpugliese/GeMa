@@ -44,7 +44,8 @@ def read_header(filename):
     return head
 
 def read_geoid(filename):
-    f = open(path_geoids + filename, "r")
+    fullpath = "C:/Users/juan-/Desktop/Geoids/geoid_service/server/gema/utils/geoids/"
+    f = open(fullpath + filename, "r")
     f.readline()
     line = f.readline()
     geoid = {}
@@ -82,13 +83,21 @@ def read_geoid(filename):
         for j in range(0, cols):
             try:
                 geoid["grid"][i, j] = line[j] 
-            except:
-                print(geoid['modelname'])
-                print(filename)
-                print(str(rows) + ',' + str(cols))
-                print("Unexpected error:" + str(i) + ',' + str(j))
-                print(len(line))
-                return
+            except Exception as e:
+                raise e
     return geoid
 
-import csv
+def test_geoids():
+    geoid_file_names = os.listdir("C:/Users/juan-/Desktop/Geoids/geoid_service/server/gema/utils/geoids")
+    i = 1
+    for name in geoid_file_names:
+        try:
+            print("reading " + name + ", " + str(i))
+            read_geoid(name)
+        except Exception as e:
+            print("----------------------")
+            print("Error in geoid " + name)
+            print(e)
+            print("----------------------")
+        i += 1
+        

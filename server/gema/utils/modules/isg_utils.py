@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import csv
-from .isg_reader import *
+from .isg_reader import get_filename_from_geoid_name, read_geoid
 
 # Point p = (lat, lng, h)
 # geoid object has a grid attribute with the geoid ondulation at each interval
@@ -84,7 +84,7 @@ def available_geoids(p):
     # bounds csv = (geoid_name, min_lat, max_lat, min_lon, max_lon, file_name)
     # Returns list of names of available geoids in format (geoid_name, file_name)
     available_geoids = []
-    print(os.listdir())
+    #print(os.listdir())
     with open(path + 'bounds.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
