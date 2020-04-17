@@ -73,8 +73,24 @@ def calculate_orthometric_height(p, geoid_name, type_='bilinear'):
         geoid = read_geoid(filename)
         Np = interpolation(p, geoid, type_)
         if Np is None:
-            raise Exception("Np is None")
+            raise Exception("Np is undefined in geoid")
         h = orthometric_height(p, Np)
+        return h
+    except Exception as e:
+        print(e)
+        return None
+
+def calculate_orthometric_height_list(point_list, geoid_name, type_='bilinear'):    
+    h = []
+    try:
+        filename = get_filename_from_geoid_name(geoid_name)
+        geoid = read_geoid(filename)
+        for p in point_list:
+            Np = interpolation(p, geoid, type_)
+            if Np is None:
+                h.append([p[0], p[1], p[2], "Undefined in geoid"])
+            else:
+                h.append([p[0], p[1], p[2], orthometric_height(p, Np)])
         return h
     except Exception as e:
         print(e)
@@ -85,14 +101,14 @@ def available_geoids_list(point_list):
     # Returns list of names of available geoids in format (geoid_name, file_name)
     available_geoids = []
     min_lat = 999
-    max_lat = -1
+    max_lat = -999
     min_lng = 999
-    max_lng = -1
+    max_lng = -999
     for p in point_list:
         if p[0] < min_lat: min_lat = p[0]
         if p[0] > max_lat: max_lat = p[0]
         if p[1] < min_lng: min_lng = p[1]
-        if p[1] > max_lng: min_lng = p[1]
+        if p[1] > max_lng: max_lng = p[1]
     #print(os.listdir())
     with open(path + 'bounds.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
@@ -102,6 +118,7 @@ def available_geoids_list(point_list):
             if min_lat >= float(row[1]) and max_lat <= float(row[2]) and min_lng >= float(row[3]) and max_lng <= float(row[4]):
                 row = (row[0])
                 available_geoids.append(row) 
+    print(min_lat, max_lat, min_lng, max_lng)
     return available_geoids    
 
 def available_geoids(p):

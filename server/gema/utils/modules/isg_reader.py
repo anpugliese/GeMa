@@ -44,7 +44,7 @@ def read_header(filename):
     return head
 
 def read_geoid(filename):
-    fullpath = "C:/Users/juan-/Desktop/Geoids/geoid_service/server/gema/utils/geoids/"
+    fullpath = "../"
     f = open(fullpath + filename, "r")
     f.readline()
     line = f.readline()
