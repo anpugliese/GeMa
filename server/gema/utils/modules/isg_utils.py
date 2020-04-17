@@ -79,7 +79,31 @@ def calculate_orthometric_height(p, geoid_name, type_='bilinear'):
     except Exception as e:
         print(e)
         return None
-    
+
+def available_geoids_list(point_list):
+    # bounds csv = (geoid_name, min_lat, max_lat, min_lon, max_lon, file_name)
+    # Returns list of names of available geoids in format (geoid_name, file_name)
+    available_geoids = []
+    min_lat = 999
+    max_lat = -1
+    min_lng = 999
+    max_lng = -1
+    for p in point_list:
+        if p[0] < min_lat: min_lat = p[0]
+        if p[0] > max_lat: max_lat = p[0]
+        if p[1] < min_lng: min_lng = p[1]
+        if p[1] > max_lng: min_lng = p[1]
+    #print(os.listdir())
+    with open(path + 'bounds.csv') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        for row in csv_reader:
+            # min_lat <= lat_p <= max_lat
+            # min_lng <= lng_p <= max_lng
+            if min_lat >= float(row[1]) and max_lat <= float(row[2]) and min_lng >= float(row[3]) and max_lng <= float(row[4]):
+                row = (row[0])
+                available_geoids.append(row) 
+    return available_geoids    
+
 def available_geoids(p):
     # bounds csv = (geoid_name, min_lat, max_lat, min_lon, max_lon, file_name)
     # Returns list of names of available geoids in format (geoid_name, file_name)
