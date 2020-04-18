@@ -44,8 +44,7 @@ def read_header(filename):
     return head
 
 def read_geoid(filename):
-    fullpath = "../"
-    f = open(fullpath + filename, "r")
+    f = open(path_geoids + filename, "r")
     f.readline()
     line = f.readline()
     geoid = {}
