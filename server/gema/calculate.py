@@ -1,4 +1,4 @@
-from utils.modules.isg_reader import test_geoids
+#from utils.modules.isg_reader import test_geoids
 import numpy as np
 
 p = (-22.5, -68, 456) #bolivia

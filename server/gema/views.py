@@ -44,8 +44,13 @@ def get_orthometric_height(request):
         lng = body['longitude']
         h = body['h']
         geoid_name = body["geoid-name"]
+        interpolation_method = ""
+        if "interpolation-method" in body:
+            interpolation_method = body["interpolation-method"]
+        else :
+            interpolation_method = "bilinear"
         p = (float(lat), float(lng), float(h))
-        o_h = calculate_orthometric_height(p, geoid_name)
+        o_h = calculate_orthometric_height(p, geoid_name, interpolation_method)
         if o_h is not None:
             res = json.dumps({"h": o_h})
         else:
@@ -58,9 +63,12 @@ def get_orthometric_height_list(request):
     if request.method == "POST":
         print(request.data.get("file"))
         point_file = request.data.get("file")
+        interpolation_method = request.data.get("interpolation-method")
+        if interpolation_method is None:
+            interpolation_method = "bilinear"
         geoid_name = request.data.get("geoid-name")
         point_list = read_point_file(point_file)
-        o_h = calculate_orthometric_height_list(point_list, geoid_name)
+        o_h = calculate_orthometric_height_list(point_list, geoid_name, interpolation_method)
         if o_h is not None:
             res = json.dumps({"point_list": o_h})
         else:
