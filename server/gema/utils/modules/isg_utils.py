@@ -26,6 +26,12 @@ def getQuadrant(p, geoid):
     
     return (i_up, j_left), (i_up, j_right), (i_down, j_left), (i_down, j_right)
 
+def spherical_distance(p1,p2):
+    print(p1)
+    print(p2)
+    psi = np.arccos(np.cos(p1[0])*np.cos(p2[0])*np.cos(p2[1]-p1[1])+ np.sin(p1[0])*np.sin(p2[0]))
+    return psi
+
 
 def interpolation(p, geoid, type_='bilinear'):
     p1,p2,p3,p4 = getQuadrant(p, geoid)
@@ -62,6 +68,23 @@ def interpolation(p, geoid, type_='bilinear'):
 
         Np = x[0]*p[0]+ x[1]*p[1] + x[2]*p[0]*p[1] + x[3]
         return Np
+
+    if type_ == 'IDW':
+        #Inverse distance weighting interpolation
+        alpha = 1
+        #sum_N_psi = grid[p1]/pow(spherical_distance(p,[lat1,lng1]),alpha) + grid[p2]/pow(spherical_distance(p,[lat2,lng2]), alpha) + grid[p3]/pow(spherical_distance(p,[lat3,lng3]), alpha) + grid[p4]/pow(spherical_distance(p,[lat4,lng4]),alpha)
+        #sum_inv_psi = 1/pow(spherical_distance(p,[lat1,lng1]),alpha) + 1/pow(spherical_distance(p,[lat2,lng2]), alpha) + 1/pow(spherical_distance(p,[lat3,lng3]), alpha) + 1/pow(spherical_distance(p,[lat4,lng4]),alpha)
+        dist1 = spherical_distance(p,[lat1,lng1])
+        dist2 = spherical_distance(p,[lat2,lng2])
+        dist3 = spherical_distance(p,[lat3,lng3])
+        dist4 = spherical_distance(p,[lat4,lng4])
+        print(dist1,dist2,dist3,dist4)
+        sum_N_psi = grid[p1]/dist1 + grid[p2]/dist2 + grid[p3]/dist3 + grid[p4]/dist4
+        sum_inv_psi = 1/dist1 + 1/dist2 + 1/dist3 + 1/dist4
+        Np = sum_N_psi/sum_inv_psi
+        return Np
+        
+
 
 def orthometric_height(p, Np):
     # Calculates ortometric heigth from a geoid ondulation Np and a point
