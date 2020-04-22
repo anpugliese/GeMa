@@ -13,8 +13,12 @@ def getQuadrant(p, geoid):
     delta_lat = geoid['deltalat']
     min_lng = geoid['lonmin']
     delta_lng = geoid['deltalon']
+    
     lat = p[0]
     lng = p[1]
+    if min_lng > 180 or geoid['lonmax'] > 180: #if the geoid has longitude from 0 to 360
+        if lng < 0: #if the longitude of the point is west of greenwich
+            lng += 360 #sum 180 offset
  
     i_up = int((lat - min_lat) / delta_lat)
     if i_up == geoid['nrows']: i_up = i_up - 1
@@ -23,12 +27,10 @@ def getQuadrant(p, geoid):
     j_left = int((lng - min_lng) / delta_lng)
     if j_left == geoid['ncols']: j_left = j_left - 1
     j_right = j_left + 1
-    
+
     return (i_up, j_left), (i_up, j_right), (i_down, j_left), (i_down, j_right)
 
 def spherical_distance(p1,p2):
-    print(p1)
-    print(p2)
     psi = np.arccos(np.cos(p1[0])*np.cos(p2[0])*np.cos(p2[1]-p1[1])+ np.sin(p1[0])*np.sin(p2[0]))
     return psi
 
@@ -43,14 +45,21 @@ def interpolation(p, geoid, type_='bilinear'):
     grid = geoid['grid'] 
     no_data = geoid['nodata']
 
+    print(grid[p1], grid[p2], grid[p3], grid[p4])
+    p_lng = p[1]
+    if min_lng > 180 or geoid['lonmax'] > 180: #if the geoid has longitude from 0 to 360
+        if p_lng < 0: #if the longitude of the point is west of greenwich
+            p_lng += 360 #sum 180 offset
+
     lat1 = min_lat + delta_lat*p1[0]
-    lng1 = min_lng + delta_lng*p1[1]
     lat2 = min_lat + delta_lat*p2[0]
-    lng2 = min_lng + delta_lng*p2[1]
     lat3 = min_lat + delta_lat*p3[0]
-    lng3 = min_lng + delta_lng*p3[1]
     lat4 = min_lat + delta_lat*p4[0]
-    lng4 = min_lng + delta_lng*p4[1]
+
+    lng1 = min_lng + delta_lng*p1[1]
+    lng2 = min_lng + delta_lng*p2[1]
+    lng3 = min_lng + delta_lng*p3[1]
+    lng4 = min_lng + delta_lng*p4[1]    
 
     if grid[p1] == no_data or grid[p2] == no_data or grid[p3] == no_data or grid[p4] == no_data:
         # No data at one of the interpolation points -> the point has no data corresponding
@@ -66,7 +75,8 @@ def interpolation(p, geoid, type_='bilinear'):
         B = np.array([grid[p1], grid[p2], grid[p3], grid[p4]]) 
         x = np.linalg.solve(A, B) 
 
-        Np = x[0]*p[0]+ x[1]*p[1] + x[2]*p[0]*p[1] + x[3]
+        Np = x[0]*p[0]+ x[1]*p_lng + x[2]*p[0]*p_lng + x[3]
+        print(Np)
         return Np
 
     if type_ == 'IDW':
@@ -78,7 +88,7 @@ def interpolation(p, geoid, type_='bilinear'):
         dist2 = spherical_distance(p,[lat2,lng2])
         dist3 = spherical_distance(p,[lat3,lng3])
         dist4 = spherical_distance(p,[lat4,lng4])
-        print(dist1,dist2,dist3,dist4)
+        #print(dist1,dist2,dist3,dist4)
         sum_N_psi = grid[p1]/dist1 + grid[p2]/dist2 + grid[p3]/dist3 + grid[p4]/dist4
         sum_inv_psi = 1/dist1 + 1/dist2 + 1/dist3 + 1/dist4
         Np = sum_N_psi/sum_inv_psi
@@ -88,7 +98,9 @@ def interpolation(p, geoid, type_='bilinear'):
 
 def orthometric_height(p, Np):
     # Calculates ortometric heigth from a geoid ondulation Np and a point
-    return p[2] - Np
+    # Round 3 decimals (milimeter lvl)
+    ans = round(p[2] - Np, 3)
+    return ans
 
 def calculate_orthometric_height(p, geoid_name, type_='bilinear'):
     try:
@@ -132,15 +144,34 @@ def available_geoids_list(point_list):
         if p[0] > max_lat: max_lat = p[0]
         if p[1] < min_lng: min_lng = p[1]
         if p[1] > max_lng: max_lng = p[1]
+    temp_min_lng = min_lng
+    temp_max_lng = max_lng
+    if temp_min_lng < 0: #if the longitude of the point is west of greenwich
+        temp_min_lng += 360 #sum 180 offset
+    if temp_max_lng < 0: #if the longitude of the point is west of greenwich
+        temp_max_lng += 360 #sum 180 offset
     #print(os.listdir())
     with open(path + 'bounds.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
             # min_lat <= lat_p <= max_lat
             # min_lng <= lng_p <= max_lng
-            if min_lat >= float(row[1]) and max_lat <= float(row[2]) and min_lng >= float(row[3]) and max_lng <= float(row[4]):
-                row = (row[0])
-                available_geoids.append(row) 
+            current_geoid_min_lat = float(row[1])
+            current_geoid_max_lat = float(row[2])
+            current_geoid_min_lng = float(row[3])
+            current_geoid_max_lng = float(row[4])
+            if current_geoid_min_lng > 180 or current_geoid_max_lng > 180: #if the geoid has longitude from 0 to 360
+                print("in")                
+                print(temp_min_lng, temp_max_lng)
+                print(current_geoid_min_lng, current_geoid_max_lng)
+                print("out")
+                if min_lat >= current_geoid_min_lat and max_lat <= current_geoid_max_lat and temp_min_lng >= current_geoid_min_lng and temp_max_lng <= current_geoid_max_lng:
+                    row = (row[0])
+                    available_geoids.append(row) 
+            else:
+                if min_lat >= current_geoid_min_lat and max_lat <= current_geoid_max_lat and min_lng >= current_geoid_min_lng and max_lng <= current_geoid_max_lng:
+                    row = (row[0])
+                    available_geoids.append(row) 
     print(min_lat, max_lat, min_lng, max_lng)
     return available_geoids    
 
@@ -154,7 +185,19 @@ def available_geoids(p):
         for row in csv_reader:
             # min_lat <= lat_p <= max_lat
             # min_lng <= lng_p <= max_lng
-            if p[0] >= float(row[1]) and p[0] <= float(row[2]) and p[1] >= float(row[3]) and p[1] <= float(row[4]):
-                row = (row[0])
-                available_geoids.append(row) 
+            current_geoid_min_lat = float(row[1])
+            current_geoid_max_lat = float(row[2])
+            current_geoid_min_lng = float(row[3])
+            current_geoid_max_lng = float(row[4])
+            if current_geoid_min_lng > 180 or current_geoid_max_lng > 180: #if the geoid has longitude from 0 to 360
+                temp_lng = p[1]
+                if temp_lng < 0:
+                    temp_lng += 360
+                if p[0] >= current_geoid_min_lat and p[0] <= current_geoid_max_lat and temp_lng >= current_geoid_min_lng and temp_lng <= current_geoid_max_lng:
+                    row = (row[0])
+                    available_geoids.append(row) 
+            else:
+                if p[0] >= current_geoid_min_lat and p[0] <= current_geoid_max_lat and p[1] >= current_geoid_min_lng and p[1] <= current_geoid_max_lng:
+                    row = (row[0])
+                    available_geoids.append(row) 
     return available_geoids    
