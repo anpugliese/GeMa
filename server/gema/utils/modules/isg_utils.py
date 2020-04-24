@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import csv
+import math
 from .isg_reader import get_filename_from_geoid_name, read_geoid
 
 # Point p = (lat, lng, h)
@@ -19,6 +20,9 @@ def getQuadrant(p, geoid):
     if min_lng > 180 or geoid['lonmax'] > 180: #if the geoid has longitude from 0 to 360
         if lng < 0: #if the longitude of the point is west of greenwich
             lng += 360 #sum 180 offset
+
+    if lat < min_lat or lat > geoid['latmax'] or lng < min_lng or lng > geoid['lonmax']:
+        return None, None, None, None
  
     i_up = int((lat - min_lat) / delta_lat)
     if i_up == geoid['nrows']: i_up = i_up - 1
@@ -37,6 +41,8 @@ def spherical_distance(p1,p2):
 
 def interpolation(p, geoid, type_='bilinear'):
     p1,p2,p3,p4 = getQuadrant(p, geoid)
+    if p1 is None:
+        return None
     # Interpolation of geoid ondulation on a given point p
     min_lat = geoid['latmin']
     delta_lat = geoid['deltalat']
@@ -45,7 +51,6 @@ def interpolation(p, geoid, type_='bilinear'):
     grid = geoid['grid'] 
     no_data = geoid['nodata']
 
-    print(grid[p1], grid[p2], grid[p3], grid[p4])
     p_lng = p[1]
     if min_lng > 180 or geoid['lonmax'] > 180: #if the geoid has longitude from 0 to 360
         if p_lng < 0: #if the longitude of the point is west of greenwich
@@ -64,7 +69,7 @@ def interpolation(p, geoid, type_='bilinear'):
     if grid[p1] == no_data or grid[p2] == no_data or grid[p3] == no_data or grid[p4] == no_data:
         # No data at one of the interpolation points -> the point has no data corresponding
         # that point
-        return None
+        return float('nan')
 
     if type_ == 'bilinear': 
         A = np.array([[lat1, lng1, lat1*lng1, 1],
@@ -76,7 +81,6 @@ def interpolation(p, geoid, type_='bilinear'):
         x = np.linalg.solve(A, B) 
 
         Np = x[0]*p[0]+ x[1]*p_lng + x[2]*p[0]*p_lng + x[3]
-        print(Np)
         return Np
 
     if type_ == 'IDW':
@@ -103,17 +107,15 @@ def orthometric_height(p, Np):
     return ans
 
 def calculate_orthometric_height(p, geoid_name, type_='bilinear'):
-    try:
-        filename = get_filename_from_geoid_name(geoid_name)
-        geoid = read_geoid(filename)
-        Np = interpolation(p, geoid, type_)
-        if Np is None:
-            raise Exception("Np is undefined in geoid")
-        h = orthometric_height(p, Np)
-        return h
-    except Exception as e:
-        print(e)
+    filename = get_filename_from_geoid_name(geoid_name)
+    geoid = read_geoid(filename)
+    Np = interpolation(p, geoid, type_)
+    if Np is None:
         return None
+    if math.isnan(Np):
+        return float("nan")
+    h = orthometric_height(p, Np)
+    return h
 
 def calculate_orthometric_height_list(point_list, geoid_name, type_='bilinear'):    
     h = []
@@ -123,12 +125,13 @@ def calculate_orthometric_height_list(point_list, geoid_name, type_='bilinear'):
         for p in point_list:
             Np = interpolation(p, geoid, type_)
             if Np is None:
-                h.append([p[0], p[1], p[2], "Undefined in geoid"])
+                h.append([p[0], p[1], p[2], "Coordinates not in the geoid"])
+            elif math.isnan(Np):
+                h.append([p[0], p[1], p[2], "Undefined in geoid"])                
             else:
                 h.append([p[0], p[1], p[2], orthometric_height(p, Np)])
         return h
     except Exception as e:
-        print(e)
         return None
 
 def available_geoids_list(point_list):
@@ -154,25 +157,27 @@ def available_geoids_list(point_list):
     with open(path + 'bounds.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
-            # min_lat <= lat_p <= max_lat
-            # min_lng <= lng_p <= max_lng
-            current_geoid_min_lat = float(row[1])
-            current_geoid_max_lat = float(row[2])
-            current_geoid_min_lng = float(row[3])
-            current_geoid_max_lng = float(row[4])
-            if current_geoid_min_lng > 180 or current_geoid_max_lng > 180: #if the geoid has longitude from 0 to 360
-                print("in")                
-                print(temp_min_lng, temp_max_lng)
-                print(current_geoid_min_lng, current_geoid_max_lng)
-                print("out")
-                if min_lat >= current_geoid_min_lat and max_lat <= current_geoid_max_lat and temp_min_lng >= current_geoid_min_lng and temp_max_lng <= current_geoid_max_lng:
-                    row = (row[0])
-                    available_geoids.append(row) 
-            else:
-                if min_lat >= current_geoid_min_lat and max_lat <= current_geoid_max_lat and min_lng >= current_geoid_min_lng and max_lng <= current_geoid_max_lng:
-                    row = (row[0])
-                    available_geoids.append(row) 
-    print(min_lat, max_lat, min_lng, max_lng)
+            for p in point_list:   
+                current_geoid_min_lat = float(row[1])
+                current_geoid_max_lat = float(row[2])
+                current_geoid_min_lng = float(row[3])
+                current_geoid_max_lng = float(row[4])
+                lat = p[0]
+                lng = p[1]
+                if current_geoid_min_lng > 180 or current_geoid_max_lng > 180: #if the geoid has longitude from 0 to 360
+                    if lng < 0: #if the longitude of the point is west of greenwich
+                        lng += 360 #sum 180 offset
+                    if lng < 0: #if the longitude of the point is west of greenwich
+                        lng += 360 #sum 180 offset
+                    if lat >= current_geoid_min_lat and lat <= current_geoid_max_lat and lng >= current_geoid_min_lng and lng <= current_geoid_max_lng:
+                        row = (row[0])
+                        available_geoids.append(row) 
+                        break
+                else:
+                    if lat >= current_geoid_min_lat and lat <= current_geoid_max_lat and lng >= current_geoid_min_lng and lng <= current_geoid_max_lng:
+                        row = (row[0])
+                        available_geoids.append(row) 
+                        break
     return available_geoids    
 
 def available_geoids(p):

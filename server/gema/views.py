@@ -1,3 +1,4 @@
+import math
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
@@ -11,7 +12,6 @@ from .utils.modules.isg_utils import available_geoids, calculate_orthometric_hei
 @csrf_exempt
 def geoids(request):
     if request.method == "POST":
-        print(request.body)
         body = json.loads(request.body)
         lat = float(body["latitude"])
         lng = float(body['longitude'])
@@ -28,7 +28,6 @@ def geoids(request):
 @api_view(['POST'])
 def geoids_list(request):
     if request.method == "POST":
-        print(request.data.get("file"))
         point_file = request.data.get("file")
         point_list = read_point_file(point_file)
         geoid_list = available_geoids_list(point_list)
@@ -51,17 +50,19 @@ def get_orthometric_height(request):
             interpolation_method = "bilinear"
         p = (float(lat), float(lng), float(h))
         o_h = calculate_orthometric_height(p, geoid_name, interpolation_method)
-        if o_h is not None:
-            res = json.dumps({"h": o_h})
+        if o_h is None:
+            res = json.dumps({"h": "Coordinates not in the geoid"})   
+        elif math.isnan(o_h):
+            res = json.dumps({"h": "Undefined in geoid"})   
         else:
-            res = json.dumps({"h": "Undefined in geoid"})      
+            res = json.dumps({"h": o_h})
+               
     return HttpResponse(res, status=200)
 
 @csrf_exempt
 @api_view(['POST'])
 def get_orthometric_height_list(request):
     if request.method == "POST":
-        print(request.data.get("file"))
         point_file = request.data.get("file")
         interpolation_method = request.data.get("interpolation-method")
         if interpolation_method is None:
@@ -92,5 +93,4 @@ def read_point_file(file):
         point_list.append([float(line_split[0]), float(line_split[1]), float(line_split[2])])
     
     f.close() 
-    print(point_list)
     return point_list
