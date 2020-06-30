@@ -7,7 +7,6 @@ from django.core.exceptions import ValidationError
 
 from django.template import loader
 from django.http import HttpResponse
-from .models import Choice, Question
 import json, csv
 from .utils.modules.isg_utils import available_geoids, calculate_orthometric_height, available_geoids_list, calculate_orthometric_height_list
 
