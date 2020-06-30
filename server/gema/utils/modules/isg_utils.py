@@ -6,7 +6,6 @@ from .isg_reader import get_filename_from_geoid_name, read_geoid
 
 # Point p = (lat, lng, h)
 # geoid object has a grid attribute with the geoid ondulation at each interval
-
 path = "gema/utils/modules/"
 
 def getQuadrant(p, geoid):
@@ -181,6 +180,7 @@ def available_geoids_list(point_list):
     return available_geoids    
 
 def available_geoids(p):
+    
     # bounds csv = (geoid_name, min_lat, max_lat, min_lon, max_lon, file_name)
     # Returns list of names of available geoids in format (geoid_name, file_name)
     available_geoids = []
