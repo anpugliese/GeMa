@@ -3,7 +3,7 @@ import os
 import csv
 
 path = "gema/utils/modules/"
-path_geoids = "gema/utils/geoids/"
+path_geoids = "C:/xampp/htdocs/geoid"
 
 def populate_bounds():
     geoid_file_names = os.listdir("geoids")

@@ -86,7 +86,7 @@ def read_point_file(file):
      
         line = f.readline()
         #print(line)
-        if not line: 
+        if not line:  
             break
         line = str(line).strip("\\rn'b")
         line_split = line.split(",")
