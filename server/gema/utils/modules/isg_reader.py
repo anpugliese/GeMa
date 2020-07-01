@@ -2,7 +2,27 @@ import numpy as np
 import os
 import csv
 
+'''
+Geoid header format:
+    modelname
+    modeltype
+    units
+    reference
+    latmin
+    latmax
+    lonmin
+    lonmax
+    deltalat
+    deltalon
+    nrows
+    ncols
+    nodata
+    ISGformat
+'''
+
 path = "gema/utils/modules/"
+
+#CHANGE THE FOLLOWING LINE TO POINT TO THE LOCAL PATH OF THE GEOID FRONT END FOLDER#
 path_geoids = "C:/xampp/htdocs/geoid"
 
 def populate_bounds():
@@ -38,8 +58,6 @@ def read_header(filename):
             
             line = f.readline()
     except:
-        #print(head['modelname'])
-        print(filename)
         return
     return head
 
@@ -48,22 +66,6 @@ def read_geoid(filename):
     f.readline()
     line = f.readline()
     geoid = {}
-    '''
-    modelname
-    modeltype
-    units
-    reference
-    latmin
-    latmax
-    lonmin
-    lonmax
-    deltalat
-    deltalon
-    nrows
-    ncols
-    nodata
-    ISGformat
-    '''
     while("end_of_head" not in line):
         line = line.replace(" ", "").replace("\n", "")
         if(":" in line):
@@ -86,6 +88,7 @@ def read_geoid(filename):
                 raise e
     return geoid
 
+# To be used only offline
 def test_geoids():
     geoid_file_names = os.listdir("C:/Users/juan-/Desktop/Geoids/geoid_service/server/gema/utils/geoids")
     i = 1
