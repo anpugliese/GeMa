@@ -51,8 +51,14 @@ def get_orthometric_height(request):
             interpolation_method = body["interpolation-method"]
         else :
             interpolation_method = "bilinear"
+
+        if "conversion-type" in body:
+            conversion_type = body["conversion-type"]
+        else :
+            conversion_type = 0
         p = (float(lat), float(lng), float(h))
-        o_h = calculate_orthometric_height(p, geoid_name, interpolation_method)
+        conversion_type = int(conversion_type)
+        o_h = calculate_orthometric_height(p, geoid_name, interpolation_method, conversion_type)
         if o_h is not None:
             res = json.dumps({"h": o_h})
         else:
@@ -70,11 +76,17 @@ def get_orthometric_height_list(request):
         if not validate_file_extension(point_file):
             return HttpResponse("File format not allowed, only csv files allowed.", status=403)
         interpolation_method = request.data.get("interpolation-method")
+        conversion_type = request.data.get("conversion-type")
         if interpolation_method is None:
             interpolation_method = "bilinear"
+
+        if "conversion-type" is None:
+            conversion_type = 0
+            
         geoid_name = request.data.get("geoid-name")
         point_list = read_point_file(point_file)
-        o_h = calculate_orthometric_height_list(point_list, geoid_name, interpolation_method)
+        conversion_type = int(conversion_type)
+        o_h = calculate_orthometric_height_list(point_list, geoid_name, interpolation_method, conversion_type)
         if o_h is not None:
             res = json.dumps({"point_list": o_h})
         else:

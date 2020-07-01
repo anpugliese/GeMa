@@ -105,7 +105,8 @@ def orthometric_height(p, Np):
     ans = round(p[2] - Np, 3)
     return ans
 
-def calculate_orthometric_height(p, geoid_name, type_='bilinear'):
+def calculate_orthometric_height(p, geoid_name, type_='bilinear', conversion_type=0):
+    #Conversion type: 0 for ellipsoidal to orthometric height, 1 for orthometric to ellipsoidal height
     filename = get_filename_from_geoid_name(geoid_name)
     geoid = read_geoid(filename)
     Np = interpolation(p, geoid, type_)
@@ -113,10 +114,12 @@ def calculate_orthometric_height(p, geoid_name, type_='bilinear'):
         return None
     if math.isnan(Np):
         return float("nan")
+    Np = Np*pow(-1,conversion_type)
     h = orthometric_height(p, Np)
     return h
 
-def calculate_orthometric_height_list(point_list, geoid_name, type_='bilinear'):    
+def calculate_orthometric_height_list(point_list, geoid_name, type_='bilinear', conversion_type=0):    
+    #Conversion type: 0 for ellipsoidal to orthometric height, 1 for orthometric to ellipsoidal height
     h = []
     try:
         filename = get_filename_from_geoid_name(geoid_name)
@@ -128,6 +131,7 @@ def calculate_orthometric_height_list(point_list, geoid_name, type_='bilinear'):
             elif math.isnan(Np):
                 h.append([p[0], p[1], p[2], "Undefined in geoid"])                
             else:
+                Np = Np*pow(-1,conversion_type)
                 h.append([p[0], p[1], p[2], orthometric_height(p, Np)])
         return h
     except Exception as e:
@@ -179,8 +183,7 @@ def available_geoids_list(point_list):
                         break
     return available_geoids    
 
-def available_geoids(p):
-    
+def available_geoids(p):    
     # bounds csv = (geoid_name, min_lat, max_lat, min_lon, max_lon, file_name)
     # Returns list of names of available geoids in format (geoid_name, file_name)
     available_geoids = []
