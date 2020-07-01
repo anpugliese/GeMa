@@ -13,7 +13,6 @@ from .utils.modules.isg_utils import available_geoids, calculate_orthometric_hei
 @csrf_exempt
 def geoids(request):
     if request.method == "POST":
-        print(request.body)
         body = json.loads(request.body)
         lat = float(body["latitude"])
         lng = float(body['longitude'])
@@ -26,7 +25,6 @@ def geoids(request):
 @api_view(['POST'])
 def geoids_list(request):
     if request.method == "POST":
-        print(request.data.get("file"))
         point_file = request.data.get("file")
         if point_file.size > 2500000:   
             return HttpResponse("File size not allowed, try with a smaller file.", status=403)
@@ -63,7 +61,6 @@ def get_orthometric_height(request):
 @api_view(['POST'])
 def get_orthometric_height_list(request):
     if request.method == "POST":
-        print(request.data.get("file"))
         point_file = request.data.get("file")
         if point_file.size > 2500000:   
             return HttpResponse("File size not allowed, try with a smaller file.", status=403)
@@ -88,9 +85,7 @@ def read_point_file(file):
     
   
     while True: 
-     
         line = f.readline()
-        #print(line)
         if not line:  
             break
         line = str(line).strip("\\rn'b")
@@ -98,7 +93,6 @@ def read_point_file(file):
         point_list.append([float(line_split[0]), float(line_split[1]), float(line_split[2])])
     
     f.close() 
-    print(point_list)
     return point_list
 
 def validate_file_extension(value):   

@@ -91,7 +91,6 @@ def interpolation(p, geoid, type_='bilinear'):
         dist2 = spherical_distance(p,[lat2,lng2])
         dist3 = spherical_distance(p,[lat3,lng3])
         dist4 = spherical_distance(p,[lat4,lng4])
-        #print(dist1,dist2,dist3,dist4)
         sum_N_psi = grid[p1]/dist1 + grid[p2]/dist2 + grid[p3]/dist3 + grid[p4]/dist4
         sum_inv_psi = 1/dist1 + 1/dist2 + 1/dist3 + 1/dist4
         Np = sum_N_psi/sum_inv_psi
@@ -152,7 +151,6 @@ def available_geoids_list(point_list):
         temp_min_lng += 360 #sum 180 offset
     if temp_max_lng < 0: #if the longitude of the point is west of greenwich
         temp_max_lng += 360 #sum 180 offset
-    #print(os.listdir())
     with open(path + 'bounds.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
@@ -184,7 +182,6 @@ def available_geoids(p):
     # bounds csv = (geoid_name, min_lat, max_lat, min_lon, max_lon, file_name)
     # Returns list of names of available geoids in format (geoid_name, file_name)
     available_geoids = []
-    #print(os.listdir())
     with open(path + 'bounds.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
