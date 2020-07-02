@@ -19,22 +19,22 @@ Geoid header format:
     nodata
     ISGformat
 '''
-
-path = "gema/utils/modules/"
+#CHANGE THE FOLLOWING LINE TO POINT TO THE LOCAL PATH OF THE GEOID BACK END FOLDER#
+path = "C:/Users/juan-/Desktop/Geoids/geoid_service"
 
 #CHANGE THE FOLLOWING LINE TO POINT TO THE LOCAL PATH OF THE GEOID FRONT END FOLDER#
 path_geoids = "C:/xampp/htdocs/geoid"
 
 def populate_bounds():
     geoid_file_names = os.listdir("geoids")
-    with open(path + 'bounds.csv', 'w', newline='') as outfile:
+    with open(path + '/server/gema/utils/modules/bounds.csv', 'w', newline='') as outfile:
         w = csv.writer(outfile)
         for name in geoid_file_names:
             geoid = read_header('geoids/'+name)
             w.writerow([geoid['modelname'], str(geoid['latmin']), str(geoid['latmax']), str(geoid['lonmin']), str(geoid['lonmax']), str(name)])
 
 def get_filename_from_geoid_name(name):
-    with open(path + 'bounds.csv') as csv_file:
+    with open(path + '/server/gema/utils/modules/bounds.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
             if row[0] == name:
