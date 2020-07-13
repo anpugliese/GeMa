@@ -8,7 +8,7 @@ from .isg_reader import get_filename_from_geoid_name, read_geoid
 # geoid object has a grid attribute with the geoid ondulation at each interval
 
 #CHANGE THE FOLLOWING LINE TO POINT TO THE LOCAL PATH OF THE GEOID BACK END FOLDER#
-path = "C:/Users/juan-/Desktop/Geoids/geoid_service"
+path = os.path.dirname(__file__)
 
 def getQuadrant(p, geoid):
     min_lat = geoid['latmin']
@@ -157,7 +157,7 @@ def available_geoids_list(point_list):
         temp_min_lng += 360 #sum 180 offset
     if temp_max_lng < 0: #if the longitude of the point is west of greenwich
         temp_max_lng += 360 #sum 180 offset
-    with open(path + '/server/gema/utils/modules/bounds.csv') as csv_file:
+    with open(path + '/bounds.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
             for p in point_list:   
@@ -187,7 +187,7 @@ def available_geoids(p):
     # bounds csv = (geoid_name, min_lat, max_lat, min_lon, max_lon, file_name)
     # Returns list of names of available geoids in format (geoid_name, file_name)
     available_geoids = []
-    with open(path + '/server/gema/utils/modules/bounds.csv') as csv_file:
+    with open(path + '/bounds.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
             # min_lat <= lat_p <= max_lat
