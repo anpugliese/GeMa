@@ -4,10 +4,12 @@ import csv
 import math
 from .isg_reader import get_filename_from_geoid_name, read_geoid
 
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # Point p = (lat, lng, h)
 # geoid object has a grid attribute with the geoid ondulation at each interval
 
-#CHANGE THE FOLLOWING LINE TO POINT TO THE LOCAL PATH OF THE GEOID BACK END FOLDER#
 path = os.path.dirname(__file__)
 
 def getQuadrant(p, geoid):
@@ -26,11 +28,11 @@ def getQuadrant(p, geoid):
         return None, None, None, None
  
     i_up = int((lat - min_lat) / delta_lat)
-    if i_up == geoid['nrows']: i_up = i_up - 1
+    if i_up >= geoid['nrows']-1: i_up = int(geoid['nrows'])-2
     i_down = i_up + 1
 
     j_left = int((lng - min_lng) / delta_lng)
-    if j_left == geoid['ncols']: j_left = j_left - 1
+    if j_left >= geoid['ncols']-1: j_left = int(geoid['ncols'])-2
     j_right = j_left + 1
 
     return (i_up, j_left), (i_up, j_right), (i_down, j_left), (i_down, j_right)
@@ -42,6 +44,7 @@ def spherical_distance(p1,p2):
 
 def interpolation(p, geoid, type_='bilinear'):
     p1,p2,p3,p4 = getQuadrant(p, geoid)
+    #print(p1,p2,p3,p4)
     if p1 is None:
         return None
     # Interpolation of geoid ondulation on a given point p
@@ -136,6 +139,8 @@ def calculate_orthometric_height_list(point_list, geoid_name, type_='bilinear', 
                 h.append([p[0], p[1], p[2], orthometric_height(p, Np)])
         return h
     except Exception as e:
+        #print(e)
+        #print(p)
         return None
 
 def available_geoids_list(point_list):
@@ -181,6 +186,7 @@ def available_geoids_list(point_list):
                         row = (row[0])
                         available_geoids.append(row) 
                         break
+    available_geoids.sort()
     return available_geoids    
 
 def available_geoids(p):    
@@ -207,4 +213,5 @@ def available_geoids(p):
                 if p[0] >= current_geoid_min_lat and p[0] <= current_geoid_max_lat and p[1] >= current_geoid_min_lng and p[1] <= current_geoid_max_lng:
                     row = (row[0])
                     available_geoids.append(row) 
+    available_geoids.sort()
     return available_geoids    

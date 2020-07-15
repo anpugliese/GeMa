@@ -84,6 +84,7 @@ def get_orthometric_height_list(request):
         point_list = read_point_file(point_file)
         conversion_type = int(conversion_type)
         o_h = calculate_orthometric_height_list(point_list, geoid_name, interpolation_method, conversion_type)
+        print(o_h)
         if o_h is not None:
             res = json.dumps({"point_list": o_h})
         else:
